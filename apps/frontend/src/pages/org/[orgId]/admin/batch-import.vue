@@ -112,7 +112,7 @@ const headers = [
   { title: t('term.actions'), key: 'actions' }
 ] as const
 
-const xlsxFile = ref<File[]>([])
+const xlsxFile = ref<File | null>(null)
 const pageState = ref<'empty' | 'ferr' | 'loaded' | 'neterr'>('empty')
 const userInfo = ref<
   {
@@ -171,13 +171,13 @@ const groupItems = computed(() => {
 // watch if xlsxFile is modified
 watch(xlsxFile, (newFile) => {
   // if xlsxFile is empty, set pageState to empty
-  if (newFile.length === 0) {
+  if (!newFile) {
     pageState.value = 'empty'
     userInfo.value = []
     return
   }
   try {
-    newFile[0].arrayBuffer().then((buffer) => {
+    newFile.arrayBuffer().then((buffer) => {
       const workbook = xlsx.read(buffer, { type: 'array' })
       userInfo.value = xlsx.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]])
       pageState.value = 'loaded'
@@ -233,7 +233,7 @@ const upload = async () => {
         ignoreDuplicates: settings.value.ignoreDuplicates
       }
     })
-    xlsxFile.value = []
+    xlsxFile.value = null
     const { insertedCount, successCount } = await res.json<{
       insertedCount: number
       successCount: number
